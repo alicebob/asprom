@@ -109,6 +109,8 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 	asc.up.Set(1.0)
 	ch <- asc.up
 
+	defer conn.Close()
+
 	for _, c := range asc.collectors {
 		c.collect(conn, ch)
 	}
