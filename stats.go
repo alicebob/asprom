@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	// statsMetrics lists the keys we report from aero's info:statistics
+	// StatsMetrics lists the keys we report from aero's info:statistics
 	// command.
 	// See `asinfo -l -v statistics` for the full list.
-	statsMetrics = []metric{
+	StatsMetrics = []metric{
 		{collGauge, "cluster_size", "cluster size, as reported by this node"},
 		{collGauge, "free-pct-disk", "disk free %"},
 		{collGauge, "free-pct-memory", "memory free %"},
@@ -31,7 +31,7 @@ type statsCollector struct {
 
 func newStatsCollector() *statsCollector {
 	smetrics := map[string]setter{}
-	for _, s := range statsMetrics {
+	for _, s := range StatsMetrics {
 		key := s.aeroName
 		promName := strings.Replace(key, "-", "_", -1)
 		switch s.typ {

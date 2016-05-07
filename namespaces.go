@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	// namespaceMetrics lists the keys we report from aero's namespace statistics command.
+	// NamespaceMetrics lists the keys we report from aero's namespace statistics command.
 	// See `asinfo -l -v namespace/<namespace>` for the full list.
-	namespaceMetrics = []metric{
+	NamespaceMetrics = []metric{
 		{collGauge, "migrate-rx-partitions-remaining", "remaining rx migrate partitions per namespace per node"},
 		{collGauge, "migrate-tx-partitions-remaining", "remaining tx migrate partitions per namespace per node"},
 		{collGauge, "free-pct-memory", "% free memory per namespace per node"},
@@ -22,17 +22,22 @@ var (
 )
 
 type nsCollector struct {
-	gauges map[string]*prometheus.GaugeVec
+	// gauges map[string]*prometheus.GaugeVec
+	descs   []prometheus.Collector
+	metrics map[string]func(ns string) setter
 }
 
 func newNSCollector() *nsCollector {
-	gauges := map[string]*prometheus.GaugeVec{}
-	for _, s := range namespaceMetrics {
+	var (
+		descs   []prometheus.Collector
+		metrics = map[string]func(ns string) setter{}
+	)
+	for _, s := range NamespaceMetrics {
 		key := s.aeroName
 		promName := strings.Replace(key, "-", "_", -1)
 		switch s.typ {
 		case collGauge:
-			gauges[key] = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+			v := prometheus.NewGaugeVec(prometheus.GaugeOpts{
 				Namespace: namespace,
 				Subsystem: systemNamespace,
 				Name:      promName,
@@ -40,19 +45,24 @@ func newNSCollector() *nsCollector {
 			},
 				[]string{"namespace"},
 			)
+			metrics[key] = func(ns string) setter {
+				return v.WithLabelValues(ns)
+			}
+			descs = append(descs, v)
 		case collCounter:
 			// todo
 		}
 	}
 
 	return &nsCollector{
-		gauges: gauges,
+		descs:   descs,
+		metrics: metrics,
 	}
 }
 
 func (c *nsCollector) describe(ch chan<- *prometheus.Desc) {
-	for _, s := range c.gauges {
-		s.Describe(ch)
+	for _, d := range c.descs {
+		d.Describe(ch)
 	}
 }
 
@@ -69,8 +79,8 @@ func (c *nsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) 
 			continue
 		}
 		ms := map[string]setter{}
-		for key, m := range c.gauges {
-			ms[key] = m.WithLabelValues(ns)
+		for key, m := range c.metrics {
+			ms[key] = m(ns)
 		}
 		infoCollect(ch, ms, nsinfo["namespace/"+ns])
 	}

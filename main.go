@@ -1,4 +1,12 @@
-// Aerospike prometheus statistics
+// Aerospike prometheus exporter
+//
+// Collects statistics for a single Aerospike node and makes it available as
+// metrics for Prometheus.
+//
+// Statistics collected:
+//   aerospike_node_*: node wide statistics. e.g. memory usage, cluster state.
+//   aerospike_ns_*: per namespace. e.g. objects, migrations.
+//   aerospike_latency_*: read/write/etc latency rates.
 package main
 
 import (
