@@ -52,7 +52,6 @@ func (s *latencyCollector) describe(ch chan<- *prometheus.Desc) {
 func (s *latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
 	stats, err := as.RequestInfo(conn, "latency:")
 	if err != nil {
-		// TODO
 		log.Print(err)
 		return
 	}

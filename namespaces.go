@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"strconv"
 	"strings"
 
 	as "github.com/aerospike/aerospike-client-go"
@@ -11,7 +10,7 @@ import (
 
 var (
 	// namespaceMetrics lists the keys we report from aero's namespace statistics command.
-	// See `asinfo -v namespace/<namespace>` for the full list.
+	// See `asinfo -l -v namespace/<namespace>` for the full list.
 	namespaceMetrics = []metric{
 		{collGauge, "migrate-rx-partitions-remaining", "remaining rx migrate partitions per namespace per node"},
 		{collGauge, "migrate-tx-partitions-remaining", "remaining tx migrate partitions per namespace per node"},
@@ -60,33 +59,19 @@ func (c *nsCollector) describe(ch chan<- *prometheus.Desc) {
 func (c *nsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
 	info, err := as.RequestInfo(conn, "namespaces")
 	if err != nil {
-		// TODO
 		log.Print(err)
 		return
 	}
-	// log.Printf("namespaces: %+v\n", info["namespaces"])
 	for _, ns := range strings.Split(info["namespaces"], ";") {
 		nsinfo, err := as.RequestInfo(conn, "namespace/"+ns)
 		if err != nil {
-			// TODO
 			log.Print(err)
-			return
+			continue
 		}
-		stats := parseInfo(nsinfo["namespace/"+ns])
+		ms := map[string]setter{}
 		for key, m := range c.gauges {
-			v, ok := stats[key]
-			if !ok {
-				log.Printf("ns key %q not present. Typo?", key)
-				continue
-			}
-			f, err := strconv.ParseFloat(v, 64)
-			if err != nil {
-				log.Printf("%q invalid value %q: %s", key, v, err)
-				continue
-			}
-			mi := m.WithLabelValues(ns)
-			mi.Set(f)
-			ch <- mi
+			ms[key] = m.WithLabelValues(ns)
 		}
+		infoCollect(ch, ms, nsinfo["namespace/"+ns])
 	}
 }
