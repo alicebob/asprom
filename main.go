@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	addr     = flag.String("listen", ":9191", "listen address for prometheus")
+	addr     = flag.String("listen", ":9145", "listen address for prometheus")
 	nodeAddr = flag.String("node", "127.0.0.1:3000", "aerospike node")
 
 	landingPage = `<html>
