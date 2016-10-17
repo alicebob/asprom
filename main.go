@@ -17,6 +17,7 @@ import (
 
 	as "github.com/aerospike/aerospike-client-go"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -46,12 +47,14 @@ func main() {
 	}
 
 	col := newAsCollector(*nodeAddr)
-	prometheus.MustRegister(col)
+
+	req := prometheus.NewRegistry()
+	req.MustRegister(col)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(landingPage))
 	})
-	http.Handle("/metrics", prometheus.Handler())
+	http.Handle("/metrics", promhttp.HandlerFor(req, promhttp.HandlerOpts{}))
 	log.Printf("starting asprom. listening on %s\n", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
