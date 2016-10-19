@@ -7,10 +7,10 @@ import (
 
 func TestParseInfo(t *testing.T) {
 	for k, v := range map[string]map[string]string{
-		"type=memory": map[string]string{
+		"type=memory": {
 			"type": "memory",
 		},
-		"type=memory;objects=103;sub-objects=0;master-objects=103;master-sub-objects=0;prole-objects=0;prole-sub-objects=0": map[string]string{
+		"type=memory;objects=103;sub-objects=0;master-objects=103;master-sub-objects=0;prole-objects=0;prole-sub-objects=0": {
 			"type":               "memory",
 			"objects":            "103",
 			"sub-objects":        "0",
@@ -19,7 +19,7 @@ func TestParseInfo(t *testing.T) {
 			"prole-objects":      "0",
 			"prole-sub-objects":  "0",
 		},
-		"version=my=version": map[string]string{
+		"version=my=version": {
 			"version": "my=version",
 		},
 	} {
