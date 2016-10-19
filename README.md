@@ -10,5 +10,4 @@ Statistics collected:
 
 TODOs:
 
-  * only some metrics are currently exported, but the rest could be added easily
   * latency as a proper histogram. The server doesn't expose this data, but the aerospike logfiles do have the data: [asloglatency](http://www.aerospike.com/docs/operations/monitor/latency/)

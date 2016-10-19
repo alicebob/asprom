@@ -8,34 +8,31 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type collType int
-
-const (
-	collGauge collType = iota
-	collCounter
-)
-
 type metric struct {
-	typ      collType
+	typ      prometheus.ValueType
 	aeroName string
 	desc     string
 }
 
-// setter is a Gauge or a Counter
-type setter interface {
-	prometheus.Metric
-	prometheus.Collector
-	Set(float64)
+// cmetrics is promkey -> prom metric
+type cmetrics map[string]cmetric
+type cmetric struct {
+	desc *prometheus.Desc
+	typ  prometheus.ValueType
 }
 
-// infoCollect parses RequestInfo() results.
-// metrics is a map from aerospike stat key -> prometheus metric.
-func infoCollect(ch chan<- prometheus.Metric, metrics map[string]setter, info string) {
+// infoCollect parses RequestInfo() results and handles the metrics
+func infoCollect(
+	ch chan<- prometheus.Metric,
+	metrics cmetrics,
+	info string,
+	labelValues ...string,
+) {
 	stats := parseInfo(info)
 	for key, m := range metrics {
 		v, ok := stats[key]
 		if !ok {
-			log.Printf("key %q not present. Typo?", key)
+			log.Printf("key %q not present", key)
 			continue
 		}
 		f, err := strconv.ParseFloat(v, 64)
@@ -43,8 +40,7 @@ func infoCollect(ch chan<- prometheus.Metric, metrics map[string]setter, info st
 			log.Printf("%q invalid value %q: %s", key, v, err)
 			continue
 		}
-		m.Set(f)
-		ch <- m
+		ch <- prometheus.MustNewConstMetric(m.desc, m.typ, f, labelValues...)
 	}
 }
 
@@ -57,4 +53,28 @@ func parseInfo(s string) map[string]string {
 		}
 	}
 	return r
+}
+
+// gauge is a helper to add an aerospike metric
+func gauge(name string, desc string) metric {
+	return metric{
+		typ:      prometheus.GaugeValue,
+		aeroName: name,
+		desc:     desc,
+	}
+}
+
+// counter is a helper to add an aerospike metric
+func counter(name string, desc string) metric {
+	return metric{
+		typ:      prometheus.CounterValue,
+		aeroName: name,
+		desc:     desc,
+	}
+}
+
+// promkey makes the prom metric name out of an aerospike stat name
+func promkey(sys, key string) string {
+	k := strings.Replace(key, "-", "_", -1)
+	return namespace + "_" + sys + "_" + k
 }

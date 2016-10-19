@@ -15,41 +15,43 @@ var (
 	LatencyIntervals = []string{">1ms", ">8ms", ">64ms"}
 )
 
-type latencyCollector struct {
-	metrics map[string]prometheus.Gauge
-}
+type latencyCollector cmetrics
 
-func newLatencyCollector() *latencyCollector {
-	s := &latencyCollector{
-		metrics: map[string]prometheus.Gauge{},
-	}
+func newLatencyCollector() latencyCollector {
+	lc := map[string]cmetric{}
 	for _, m := range LatencyMetrics {
-		s.metrics[m+"_ops_sec"] = prometheus.NewGauge(prometheus.GaugeOpts{
-			Namespace: namespace,
-			Subsystem: systemLatency,
-			Name:      m + "_ops_sec",
-			Help:      m + " ops per second",
-		})
+		lc[m+"_ops_sec"] = cmetric{
+			typ: prometheus.GaugeValue,
+			desc: prometheus.NewDesc(
+				promkey(systemLatency, m+"_ops_sec"),
+				m+" ops per second",
+				nil,
+				nil,
+			),
+		}
 		for _, int := range LatencyIntervals {
 			promName := strings.Replace(m+"_"+int, ">", "gt_", -1)
-			s.metrics[m+"_"+int] = prometheus.NewGauge(prometheus.GaugeOpts{
-				Namespace: namespace,
-				Subsystem: systemLatency,
-				Name:      promName,
-				Help:      m + " " + int,
-			})
+			lc[m+"_"+int] = cmetric{
+				typ: prometheus.GaugeValue,
+				desc: prometheus.NewDesc(
+					promkey(systemLatency, promName),
+					m+" "+int,
+					nil,
+					nil,
+				),
+			}
 		}
 	}
-	return s
+	return lc
 }
 
-func (s *latencyCollector) describe(ch chan<- *prometheus.Desc) {
-	for _, m := range s.metrics {
-		m.Describe(ch)
+func (lc latencyCollector) describe(ch chan<- *prometheus.Desc) {
+	for _, s := range lc {
+		ch <- s.desc
 	}
 }
 
-func (s *latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
+func (lc latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
 	stats, err := as.RequestInfo(conn, "latency:")
 	if err != nil {
 		log.Print(err)
@@ -60,16 +62,14 @@ func (s *latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Met
 		for k, v := range ls {
 			switch {
 			case k == "ops/sec":
-				if m, ok := s.metrics[typ+"_ops_sec"]; ok {
-					m.Set(v)
-					ch <- m
+				if m, ok := lc[typ+"_ops_sec"]; ok {
+					ch <- prometheus.MustNewConstMetric(m.desc, m.typ, v)
 				} else {
 					log.Printf("unknown latency type: %q", typ)
 				}
 			case strings.HasPrefix(k, ">"):
-				if m, ok := s.metrics[typ+"_"+k]; ok {
-					m.Set(v)
-					ch <- m
+				if m, ok := lc[typ+"_"+k]; ok {
+					ch <- prometheus.MustNewConstMetric(m.desc, m.typ, v)
 				}
 			}
 		}
