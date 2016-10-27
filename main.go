@@ -38,6 +38,13 @@ var (
 <p><a href="/metrics">Metrics</a></p>
 </body>
 </html>`
+
+	upDesc = prometheus.NewDesc(
+		namespace+"_"+systemNode+"_up",
+		"Is this node up",
+		nil,
+		nil,
+	)
 )
 
 func main() {
@@ -65,9 +72,9 @@ type collector interface {
 }
 
 type asCollector struct {
-	nodeAddr         string
-	totalScrapes, up prometheus.Counter
-	collectors       []collector
+	nodeAddr     string
+	totalScrapes prometheus.Counter
+	collectors   []collector
 }
 
 func newAsCollector(nodeAddr string) *asCollector {
@@ -78,17 +85,9 @@ func newAsCollector(nodeAddr string) *asCollector {
 		Help:      "Total number of times Aerospike was scraped for metrics.",
 	})
 
-	up := prometheus.NewGauge(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: systemNode,
-		Name:      "up",
-		Help:      "Is this node up",
-	})
-
 	return &asCollector{
 		nodeAddr:     nodeAddr,
 		totalScrapes: totalScrapes,
-		up:           up,
 		collectors: []collector{
 			newStatsCollector(),
 			newNSCollector(),
@@ -100,7 +99,7 @@ func newAsCollector(nodeAddr string) *asCollector {
 // Describe implements the prometheus.Collector interface.
 func (asc *asCollector) Describe(ch chan<- *prometheus.Desc) {
 	asc.totalScrapes.Describe(ch)
-	asc.up.Describe(ch)
+	ch <- upDesc
 	for _, c := range asc.collectors {
 		c.describe(ch)
 	}
@@ -113,12 +112,10 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 
 	conn, err := as.NewConnection(asc.nodeAddr, 3*time.Second)
 	if err != nil {
-		asc.up.Set(0.0)
-		ch <- asc.up
+		ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
 		return
 	}
-	asc.up.Set(1.0)
-	ch <- asc.up
+	ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 1.0)
 
 	defer conn.Close()
 
