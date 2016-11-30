@@ -22,6 +22,13 @@ func TestParseInfo(t *testing.T) {
 		"version=my=version": {
 			"version": "my=version",
 		},
+		"ns=vk:set=user:objects=2501:memory_data_bytes=0:deleting=false": {
+			"ns":                "vk",
+			"set":               "user",
+			"objects":           "2501",
+			"memory_data_bytes": "0",
+			"deleting":          "false",
+		},
 	} {
 		if have, want := parseInfo(k), v; !reflect.DeepEqual(have, want) {
 			t.Errorf("have %+v, want %+v", have, want)

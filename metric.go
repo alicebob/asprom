@@ -46,10 +46,12 @@ func infoCollect(
 
 func parseInfo(s string) map[string]string {
 	r := map[string]string{}
-	for _, v := range strings.Split(s, ";") {
-		kv := strings.SplitN(v, "=", 2)
-		if len(kv) > 1 {
-			r[kv[0]] = kv[1]
+	for _, l := range strings.Split(s, ";") {
+		for _, v := range strings.Split(l, ":") {
+			kv := strings.SplitN(v, "=", 2)
+			if len(kv) > 1 {
+				r[kv[0]] = kv[1]
+			}
 		}
 	}
 	return r
