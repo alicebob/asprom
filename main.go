@@ -25,6 +25,7 @@ const (
 	systemNode      = "node"
 	systemNamespace = "ns"
 	systemLatency   = "latency"
+	systemSet       = "set"
 )
 
 var (
@@ -92,6 +93,7 @@ func newAsCollector(nodeAddr string) *asCollector {
 			newStatsCollector(),
 			newNSCollector(),
 			newLatencyCollector(),
+			newSetCollector(),
 		},
 	}
 }
