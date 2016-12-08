@@ -6,7 +6,8 @@ Statistics collected:
 
   * aerospike_node_*: node wide statistics. e.g. memory usage, cluster state.
   * aerospike_ns_*: per namespace. e.g. objects, migrations.
-  * aerospike_latency_*: read/write/etc latency rates(!).
+  * aerospike_sets_*: statistics per set: objects, memory usage
+  * aerospike_latency_*: read/write/etc latency rates(!) (as asinfo -v "latency:" reports").
 
 TODOs:
 
