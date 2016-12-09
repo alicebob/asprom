@@ -32,7 +32,7 @@ func infoCollect(
 	for key, m := range metrics {
 		v, ok := stats[key]
 		if !ok {
-			log.Printf("key %q not present", key)
+			// key presence depends on (namespace) configuration
 			continue
 		}
 		f, err := strconv.ParseFloat(v, 64)

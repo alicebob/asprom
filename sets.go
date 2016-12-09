@@ -50,6 +50,9 @@ func (setc setCollector) collect(conn *as.Connection, ch chan<- prometheus.Metri
 		return
 	}
 	for _, setInfo := range strings.Split(info["sets"], ";") {
+		if setInfo == "" {
+			continue
+		}
 		setStats := parseInfo(setInfo)
 		infoCollect(ch, cmetrics(setc), setInfo, setStats["ns"], setStats["set"])
 	}
