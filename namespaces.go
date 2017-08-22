@@ -83,6 +83,10 @@ var (
 		counter("query_lookup_error", "query lookup error"),
 		counter("query_lookup_abort", "query lookup abort"),
 		counter("query_lookup_avg_rec_count", "query lookup avg rec count"),
+		counter("fail_record_too_big", "fail record too big"),
+		counter("fail_key_busy", "fail key busy"),
+		counter("fail_generation", "fail generation"),
+		counter("client_udf_error", "client udf error"),
 	}
 )
 
