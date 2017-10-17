@@ -34,6 +34,8 @@ const (
 var (
 	addr     = flag.String("listen", ":9145", "listen address for prometheus")
 	nodeAddr = flag.String("node", "127.0.0.1:3000", "aerospike node")
+	username = flag.String("username", "", "username. Leave empty for no authentication")
+	password = flag.String("password", "", "password")
 
 	landingPage = `<html>
 <head><title>Aerospike exporter</title></head>
@@ -57,7 +59,7 @@ func main() {
 		log.Fatal("usage error")
 	}
 
-	col := newAsCollector(*nodeAddr)
+	col := newAsCollector(*nodeAddr, *username, *password)
 
 	req := prometheus.NewRegistry()
 	req.MustRegister(col)
@@ -77,11 +79,13 @@ type collector interface {
 
 type asCollector struct {
 	nodeAddr     string
+	username     string
+	password     string
 	totalScrapes prometheus.Counter
 	collectors   []collector
 }
 
-func newAsCollector(nodeAddr string) *asCollector {
+func newAsCollector(nodeAddr, username, password string) *asCollector {
 	totalScrapes := prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: systemNode,
@@ -91,6 +95,8 @@ func newAsCollector(nodeAddr string) *asCollector {
 
 	return &asCollector{
 		nodeAddr:     nodeAddr,
+		username:     username,
+		password:     password,
 		totalScrapes: totalScrapes,
 		collectors: []collector{
 			newStatsCollector(),
@@ -119,6 +125,12 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
 		return
+	}
+	if asc.username != "" {
+		if err := conn.Authenticate(asc.username, []byte(asc.password)); err != nil {
+			ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
+			return
+		}
 	}
 	ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 1.0)
 
