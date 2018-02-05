@@ -13,18 +13,45 @@ var (
 	// See `asinfo -l -v statistics` for the full list.
 	StatsMetrics = []metric{
 		gauge("cluster_size", "cluster size"),
+		// cluster_key=C0758EC6A81F
+		// cluster_integrity=true
+		// cluster_is_member=true
+		counter("uptime", "uptime"),
 		gauge("system_free_mem_pct", "system free mem pct"),
+		// system_swapping=false
+		gauge("heap_allocated_kbytes", "heap allocated kbytes"),
+		gauge("heap_active_kbytes", "heap active kbytes"),
+		gauge("heap_mapped_kbytes", "heap mapped kbytes"),
+		gauge("heap_efficiency_pct", "heap efficiency pct"),
+		gauge("heap_site_count", "heap site count"),
 		gauge("objects", "objects"),
-		gauge("sub_objects", "sub objects"),
+		gauge("tombstones", "tombstones"),
+		gauge("tsvc_queue", "tsvc queue"),
 		gauge("info_queue", "info queue"),
 		gauge("delete_queue", "delete queue"),
+		// rw_in_progress=0
+		// proxy_in_progress=0
+		// tree_gc_queue=0
 		gauge("client_connections", "client connections"),
 		gauge("heartbeat_connections", "heartbeat connections"),
 		gauge("fabric_connections", "fabric connections"),
+		counter("heartbeat_received_self", "heartbeat received self"),
+		counter("heartbeat_received_foreign", "heartbeat received foreign"),
+		counter("reaped_fds", "reaped fds"),
+		counter("info_complete", "info complete"),
+		counter("demarshal_error", "demarshal error"),
+		counter("early_tsvc_client_error", "early tsvc client error"),
+		counter("early_tsvc_batch_sub_error", "early tsvc batch sub error"),
+		counter("early_tsvc_udf_sub_error", "early tsvc udf sub error"),
 		gauge("batch_index_initiate", "batch index initiate"),
+		// batch_index_queue=0:0,0:0,0:0,0:0
 		gauge("batch_index_complete", "batch index complete"),
 		gauge("batch_index_error", "batch index error"),
 		gauge("batch_index_timeout", "batch index timeout"),
+		gauge("batch_index_unused_buffers", "batch index unused buffers"),
+		gauge("batch_index_huge_buffers", "batch index huge buffers"),
+		counter("batch_index_created_buffers", "batch index created buffers"),
+		counter("batch_index_destroyed_buffers", "batch index destroyed buffers"),
 		gauge("batch_initiate", "batch initiate"),
 		gauge("batch_queue", "batch queue"),
 		gauge("batch_error", "batch error"),
@@ -34,15 +61,22 @@ var (
 		gauge("query_long_running", "query long running"),
 		gauge("sindex_ucgarbage_found", "sindex ucgarbage found"),
 		gauge("sindex_gc_locktimedout", "sindex gc locktimedout"),
-		gauge("sindex_gc_inactivity_dur", "sindex gc inactivity dur"),
-		gauge("sindex_gc_activity_dur", "sindex gc activity dur"),
 		gauge("sindex_gc_list_creation_time", "sindex gc list creation time"),
 		gauge("sindex_gc_list_deletion_time", "sindex gc list deletion time"),
 		gauge("sindex_gc_objects_validated", "sindex gc objects validated"),
 		gauge("sindex_gc_garbage_found", "sindex gc garbage found"),
 		gauge("sindex_gc_garbage_cleaned", "sindex gc garbage cleaned"),
-		counter("fabric_msgs_sent", "fabric msgs sent"),
-		counter("fabric_msgs_rcvd", "fabric msgs rcvd"),
+		// paxos_principal=BB9508FED001500
+		// migrate_allowed=true
+		gauge("migrate_partitions_remaining", "migrate partitions remaining"),
+		gauge("fabric_bulk_send_rate", "fabric bulk send rate"),
+		gauge("fabric_bulk_recv_rate", "fabric bulk recv rate"),
+		gauge("fabric_ctrl_send_rate", "fabric ctrl send rate"),
+		gauge("fabric_ctrl_recv_rate", "fabric ctrl recv rate"),
+		gauge("fabric_meta_send_rate", "fabric meta send rate"),
+		gauge("fabric_meta_recv_rate", "fabric meta recv rate"),
+		gauge("fabric_rw_send_rate", "fabric rw send rate"),
+		gauge("fabric_rw_recv_rate", "fabric rw recv rate"),
 		counter("xdr_ship_success", "xdr ship success"),
 		counter("xdr_ship_delete_success", "xdr ship delete success"),
 		counter("xdr_ship_source_error", "xdr ship source error"),
