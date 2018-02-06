@@ -13,8 +13,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	as "github.com/aerospike/aerospike-client-go"
@@ -32,8 +34,10 @@ const (
 )
 
 var (
-	addr     = flag.String("listen", ":9145", "listen address for prometheus")
-	nodeAddr = flag.String("node", "127.0.0.1:3000", "aerospike node")
+	version     = "master"
+	addr        = flag.String("listen", ":9145", "listen address for prometheus")
+	nodeAddr    = flag.String("node", "127.0.0.1:3000", "aerospike node")
+	showVersion = flag.Bool("version", false, "show version")
 
 	landingPage = `<html>
 <head><title>Aerospike exporter</title></head>
@@ -55,6 +59,11 @@ func main() {
 	flag.Parse()
 	if len(flag.Args()) != 0 {
 		log.Fatal("usage error")
+	}
+
+	if *showVersion {
+		fmt.Printf("asprom %s\n", version)
+		os.Exit(0)
 	}
 
 	col := newAsCollector(*nodeAddr)
