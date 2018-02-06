@@ -1,4 +1,4 @@
-.PHONY: all build test
+.PHONY: all build test release
 
 all: build test
 
@@ -7,3 +7,6 @@ build:
 
 test:
 	go test
+
+release:
+	goreleaser --rm-dist

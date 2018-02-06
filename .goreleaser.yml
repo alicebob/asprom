@@ -1,0 +1,15 @@
+builds:
+  - binary: asprom
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+archive:
+    files:
+        - LICENSE
+    wrap_in_directory: true
+release:
+    github:
+        owner: alicebob
+        name: asprom
