@@ -137,6 +137,7 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 	if asc.username != "" {
 		if err := conn.Authenticate(asc.username, []byte(asc.password)); err != nil {
+			log.Printf("auth error: %s", err)
 			ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
 			return
 		}
