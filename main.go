@@ -20,6 +20,7 @@ import (
 	"time"
 
 	as "github.com/aerospike/aerospike-client-go"
+	"github.com/aerospike/aerospike-client-go/pkg/bcrypt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -136,7 +137,13 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 	if asc.username != "" {
-		if err := conn.Authenticate(asc.username, []byte(asc.password)); err != nil {
+		hp, err := hashPassword(asc.password)
+		if err != nil {
+			log.Printf("hashPassword: %s", err)
+			ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
+			return
+		}
+		if err := conn.Authenticate(asc.username, hp); err != nil {
 			log.Printf("auth error: %s", err)
 			ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
 			return
@@ -149,4 +156,15 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, c := range asc.collectors {
 		c.collect(conn, ch)
 	}
+}
+
+// take from github.com/aerospike/aerospike-client-go/admin_command.go
+func hashPassword(password string) ([]byte, error) {
+	// Hashing the password with the cost of 10, with a static salt
+	const salt = "$2a$10$7EqJtq98hPqEX7fNZaFWoO"
+	hashedPassword, err := bcrypt.Hash(password, salt)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(hashedPassword), nil
 }
