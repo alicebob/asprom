@@ -75,7 +75,7 @@ func (lc latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Met
 		}
 		ns, op, err := readNS(key)
 		if err != nil {
-			log.Print("weird latency key %q: %s", key, err)
+			log.Printf("weird latency key %q: %s", key, err)
 			continue
 		}
 		for threshold, data := range metrics {
