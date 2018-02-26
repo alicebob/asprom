@@ -3,7 +3,7 @@
 all: build test
 
 build:
-	go build -i
+	go build
 
 test:
 	go test
