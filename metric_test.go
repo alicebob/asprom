@@ -76,6 +76,34 @@ func TestInfoCollect(t *testing.T) {
 			},
 			want: `counter:<value:3.14 > `,
 		},
+		{
+			payload: "counter-1=3.14:gauge-1=6.12:flag=false:counter-2=6.66",
+			field:   "flag",
+			metric: cmetric{
+				typ: prometheus.GaugeValue,
+				desc: prometheus.NewDesc(
+					"c1",
+					"My first flag",
+					nil,
+					nil,
+				),
+			},
+			want: `gauge:<value:0 > `,
+		},
+		{
+			payload: "counter-1=3.14:gauge-1=6.12:flag=true:counter-2=6.66",
+			field:   "flag",
+			metric: cmetric{
+				typ: prometheus.GaugeValue,
+				desc: prometheus.NewDesc(
+					"c1",
+					"My second flag",
+					nil,
+					nil,
+				),
+			},
+			want: `gauge:<value:1 > `,
+		},
 	} {
 		ch := make(chan prometheus.Metric)
 		metrics := cmetrics{c.field: c.metric}

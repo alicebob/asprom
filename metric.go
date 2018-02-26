@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -22,19 +23,18 @@ type cmetric struct {
 }
 
 func parseFloatOrBool(v string) (float64, error) {
-	f, err := strconv.ParseFloat(v, 64)
-	if err != nil {
-		// trying to see if the value is a boolean
-		b, err2 := strconv.ParseBool(v)
-		if err2 == nil {
-			err = nil
-			f = 0
-			if b {
-				f = 1
-			}
-		}
+	if f, err := strconv.ParseFloat(v, 64); err == nil {
+		return f, nil
 	}
-	return f, err
+
+	if b, err := strconv.ParseBool(v); err == nil {
+		if b {
+			return 1, nil
+		}
+		return 0, nil
+	}
+
+	return 0, fmt.Errorf("not a float or bool: %q", v)
 }
 
 // infoCollect parses RequestInfo() results and handles the metrics
