@@ -104,6 +104,14 @@ var (
 		counter("xdr_uninitialized_destination_error", "xdr uninitialized destination error"),
 		gauge("xdr_timelag", "xdr timelag"),
 		gauge("xdr_throughput", "xdr throughput"),
+		gauge("dlog_free_pct", "dlog free pct"),
+		counter("dlog_logged", "dlog logged"),
+		counter("dlog_overwritten_error", "dlog overwritten error"),
+		counter("dlog_processed_link_down", "dlog processed link down"),
+		counter("dlog_processed_main", "dlog processed main"),
+		counter("dlog_processed_replica", "dlog processed replica"),
+		counter("dlog_relogged", "dlog relogged"),
+		counter("dlog_used_objects", "dlog used objects"),
 	}
 )
 
