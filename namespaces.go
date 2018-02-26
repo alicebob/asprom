@@ -40,6 +40,11 @@ var (
 		gauge("memory_free_pct", "memory free pct"),
 		// xmem_id=0
 		gauge("available_bin_names", "available bin names"),
+		gauge("device_total_bytes", "device total bytes"),
+		gauge("device_used_bytes", "device used bytes"),
+		gauge("device_free_pct", "device free pct"),
+		gauge("device_available_pct", "device available pct"),
+		// cache_read_pct=0
 		gauge("migrate_tx_partitions_imbalance", "migrate tx partitions imbalance"),
 		gauge("migrate_tx_instances", "migrate tx instances"),
 		gauge("migrate_rx_instances", "migrate rx instances"),
@@ -191,11 +196,6 @@ var (
 		// geo2dsphere-within.max-cells=12
 		// geo2dsphere-within.level-mod=1
 		// geo2dsphere-within.earth-radius-meters=6371000
-
-		gauge("device_total_bytes", "device total bytes"),
-		gauge("device_used_bytes", "device used bytes"),
-		gauge("device_free_pct", "device free pct"),
-		gauge("device_available_pct", "device available pct"),
 	}
 )
 
