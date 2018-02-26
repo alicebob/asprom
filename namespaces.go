@@ -22,8 +22,8 @@ var (
 		gauge("prole_tombstones", "prole tombstones"),
 		gauge("non_replica_objects", "non replica objects"),
 		gauge("non_replica_tombstones", "non replica tombstones"),
-		// stop_writes=false
-		// hwm_breached=false
+		gauge("stop_writes", "stop writes"),
+		gauge("hwm_breached", "hwm breached"),
 		// current_time=257114127
 		gauge("non_expirable_objects", "non expirable objects"),
 		counter("expired_objects", "expired objects"),
