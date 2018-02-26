@@ -21,6 +21,22 @@ type cmetric struct {
 	typ  prometheus.ValueType
 }
 
+func parseFloatOrBool(v string) (float64, error) {
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		// trying to see if the value is a boolean
+		b, err2 := strconv.ParseBool(v)
+		if err2 == nil {
+			err = nil
+			f = 0
+			if b {
+				f = 1
+			}
+		}
+	}
+	return f, err
+}
+
 // infoCollect parses RequestInfo() results and handles the metrics
 func infoCollect(
 	ch chan<- prometheus.Metric,
@@ -35,7 +51,7 @@ func infoCollect(
 			// key presence depends on (namespace) configuration
 			continue
 		}
-		f, err := strconv.ParseFloat(v, 64)
+		f, err := parseFloatOrBool(v)
 		if err != nil {
 			log.Printf("%q invalid value %q: %s", key, v, err)
 			continue
