@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	as "github.com/aerospike/aerospike-client-go"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -139,11 +137,11 @@ func (sc statsCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (sc statsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
+func (sc statsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
 	res, err := as.RequestInfo(conn, "statistics")
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	infoCollect(ch, cmetrics(sc), res["statistics"])
+	return nil
 }

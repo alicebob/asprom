@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -58,16 +57,14 @@ func (lc latencyCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (lc latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
+func (lc latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
 	stats, err := as.RequestInfo(conn, "latency:")
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	lat, err := parseLatency(stats["latency:"])
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	for key, metrics := range lat {
 		if key == "batch-index" {
@@ -75,8 +72,7 @@ func (lc latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Met
 		}
 		ns, op, err := readNS(key)
 		if err != nil {
-			log.Printf("weird latency key %q: %s", key, err)
-			continue
+			return fmt.Errorf("weird latency key %q: %s", key, err)
 		}
 		for threshold, data := range metrics {
 			if threshold == "ops/sec" {
@@ -88,6 +84,7 @@ func (lc latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Met
 			ch <- prometheus.MustNewConstMetric(m.desc, m.typ, data, ns, threshold)
 		}
 	}
+	return nil
 }
 
 // parseLatency returns map with: "[{namespace}]-[op]" -> map[threshold]measurement

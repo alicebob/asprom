@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strings"
 
 	as "github.com/aerospike/aerospike-client-go"
@@ -43,11 +42,10 @@ func (setc setCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (setc setCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
+func (setc setCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
 	info, err := as.RequestInfo(conn, "sets")
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	for _, setInfo := range strings.Split(info["sets"], ";") {
 		if setInfo == "" {
@@ -56,4 +54,5 @@ func (setc setCollector) collect(conn *as.Connection, ch chan<- prometheus.Metri
 		setStats := parseInfo(setInfo)
 		infoCollect(ch, cmetrics(setc), setInfo, setStats["ns"], setStats["set"])
 	}
+	return nil
 }

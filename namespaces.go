@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strings"
 
 	as "github.com/aerospike/aerospike-client-go"
@@ -223,18 +222,17 @@ func (nc nsCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (nc nsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) {
+func (nc nsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
 	info, err := as.RequestInfo(conn, "namespaces")
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	for _, ns := range strings.Split(info["namespaces"], ";") {
 		nsinfo, err := as.RequestInfo(conn, "namespace/"+ns)
 		if err != nil {
-			log.Print(err)
-			continue
+			return err
 		}
 		infoCollect(ch, cmetrics(nc), nsinfo["namespace/"+ns], ns)
 	}
+	return nil
 }

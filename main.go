@@ -83,7 +83,7 @@ func main() {
 }
 
 type collector interface {
-	collect(*as.Connection, chan<- prometheus.Metric)
+	collect(*as.Connection, chan<- prometheus.Metric) error
 	describe(ch chan<- *prometheus.Desc)
 }
 
@@ -154,7 +154,10 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 	defer conn.Close()
 
 	for _, c := range asc.collectors {
-		c.collect(conn, ch)
+		if err := c.collect(conn, ch); err != nil {
+			log.Print(err)
+			return
+		}
 	}
 }
 
