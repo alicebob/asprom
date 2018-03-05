@@ -57,34 +57,41 @@ func (lc latencyCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (lc latencyCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
+func (lc latencyCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) {
 	stats, err := as.RequestInfo(conn, "latency:")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	lat, err := parseLatency(stats["latency:"])
 	if err != nil {
-		return err
+		return nil, err
 	}
-	for key, metrics := range lat {
+	var metrics []prometheus.Metric
+	for key, ms := range lat {
 		if key == "batch-index" {
 			continue // TODO: would be nice to do something with this key
 		}
 		ns, op, err := readNS(key)
 		if err != nil {
-			return fmt.Errorf("weird latency key %q: %s", key, err)
+			return nil, fmt.Errorf("weird latency key %q: %s", key, err)
 		}
-		for threshold, data := range metrics {
+		for threshold, data := range ms {
 			if threshold == "ops/sec" {
 				m := lc.ops[op]
-				ch <- prometheus.MustNewConstMetric(m.desc, m.typ, data, ns)
+				metrics = append(
+					metrics,
+					prometheus.MustNewConstMetric(m.desc, m.typ, data, ns),
+				)
 				continue
 			}
 			m := lc.latency[op]
-			ch <- prometheus.MustNewConstMetric(m.desc, m.typ, data, ns, threshold)
+			metrics = append(
+				metrics,
+				prometheus.MustNewConstMetric(m.desc, m.typ, data, ns, threshold),
+			)
 		}
 	}
-	return nil
+	return metrics, nil
 }
 
 // parseLatency returns map with: "[{namespace}]-[op]" -> map[threshold]measurement

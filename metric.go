@@ -39,11 +39,11 @@ func parseFloatOrBool(v string) (float64, error) {
 
 // infoCollect parses RequestInfo() results and handles the metrics
 func infoCollect(
-	ch chan<- prometheus.Metric,
 	metrics cmetrics,
 	info string,
 	labelValues ...string,
-) {
+) []prometheus.Metric {
+	var res []prometheus.Metric
 	stats := parseInfo(info)
 	for key, m := range metrics {
 		v, ok := stats[key]
@@ -56,8 +56,12 @@ func infoCollect(
 			log.Printf("%q invalid value %q: %s", key, v, err)
 			continue
 		}
-		ch <- prometheus.MustNewConstMetric(m.desc, m.typ, f, labelValues...)
+		res = append(
+			res,
+			prometheus.MustNewConstMetric(m.desc, m.typ, f, labelValues...),
+		)
 	}
+	return res
 }
 
 func parseInfo(s string) map[string]string {

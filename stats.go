@@ -137,11 +137,10 @@ func (sc statsCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (sc statsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
+func (sc statsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) {
 	res, err := as.RequestInfo(conn, "statistics")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	infoCollect(ch, cmetrics(sc), res["statistics"])
-	return nil
+	return infoCollect(cmetrics(sc), res["statistics"]), nil
 }

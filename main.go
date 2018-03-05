@@ -83,7 +83,7 @@ func main() {
 }
 
 type collector interface {
-	collect(*as.Connection, chan<- prometheus.Metric) error
+	collect(*as.Connection) ([]prometheus.Metric, error)
 	describe(ch chan<- *prometheus.Desc)
 }
 
@@ -131,34 +131,44 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 	asc.totalScrapes.Inc()
 	ch <- asc.totalScrapes
 
-	conn, err := as.NewConnection(asc.nodeAddr, 3*time.Second)
+	ms, err := asc.collect()
 	if err != nil {
+		log.Print(err)
 		ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
 		return
 	}
+	ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 1.0)
+	for _, m := range ms {
+		ch <- m
+	}
+}
+
+func (asc *asCollector) collect() ([]prometheus.Metric, error) {
+	conn, err := as.NewConnection(asc.nodeAddr, 3*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
 	if asc.username != "" {
 		hp, err := hashPassword(asc.password)
 		if err != nil {
-			log.Printf("hashPassword: %s", err)
-			ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
-			return
+			return nil, fmt.Errorf("hashPassword: %s", err)
 		}
 		if err := conn.Authenticate(asc.username, hp); err != nil {
-			log.Printf("auth error: %s", err)
-			ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 0.0)
-			return
+			return nil, fmt.Errorf("auth error: %s", err)
 		}
 	}
-	ch <- prometheus.MustNewConstMetric(upDesc, prometheus.GaugeValue, 1.0)
 
-	defer conn.Close()
-
+	var metrics []prometheus.Metric
 	for _, c := range asc.collectors {
-		if err := c.collect(conn, ch); err != nil {
-			log.Print(err)
-			return
+		ms, err := c.collect(conn)
+		if err != nil {
+			return nil, err
 		}
+		metrics = append(metrics, ms...)
 	}
+	return metrics, nil
 }
 
 // take from github.com/aerospike/aerospike-client-go/admin_command.go

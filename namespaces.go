@@ -222,17 +222,21 @@ func (nc nsCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (nc nsCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
+func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) {
 	info, err := as.RequestInfo(conn, "namespaces")
 	if err != nil {
-		return err
+		return nil, err
 	}
+	var metrics []prometheus.Metric
 	for _, ns := range strings.Split(info["namespaces"], ";") {
 		nsinfo, err := as.RequestInfo(conn, "namespace/"+ns)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		infoCollect(ch, cmetrics(nc), nsinfo["namespace/"+ns], ns)
+		metrics = append(
+			metrics,
+			infoCollect(cmetrics(nc), nsinfo["namespace/"+ns], ns)...,
+		)
 	}
-	return nil
+	return metrics, nil
 }

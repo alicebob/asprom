@@ -3,7 +3,6 @@ package main
 import (
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
@@ -105,17 +104,13 @@ func TestInfoCollect(t *testing.T) {
 			want: `gauge:<value:1 > `,
 		},
 	} {
-		ch := make(chan prometheus.Metric)
 		metrics := cmetrics{c.field: c.metric}
-		go infoCollect(ch, metrics, c.payload)
+		ms := infoCollect(metrics, c.payload)
 
-		var metric prometheus.Metric
-		select {
-		case metric = <-ch:
-		case <-time.After(time.Second):
-			t.Fatalf("timeout for case %d (%q)", n, c.want)
+		if have, want := len(ms), 1; have != want {
+			t.Fatalf("have %d, want %d", have, want)
 		}
-
+		metric := ms[0]
 		m := &dto.Metric{}
 		metric.Write(m)
 		if have, want := m.String(), c.want; have != want {

@@ -42,17 +42,21 @@ func (setc setCollector) describe(ch chan<- *prometheus.Desc) {
 	}
 }
 
-func (setc setCollector) collect(conn *as.Connection, ch chan<- prometheus.Metric) error {
+func (setc setCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) {
+	var metrics []prometheus.Metric
 	info, err := as.RequestInfo(conn, "sets")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, setInfo := range strings.Split(info["sets"], ";") {
 		if setInfo == "" {
 			continue
 		}
 		setStats := parseInfo(setInfo)
-		infoCollect(ch, cmetrics(setc), setInfo, setStats["ns"], setStats["set"])
+		metrics = append(
+			metrics,
+			infoCollect(cmetrics(setc), setInfo, setStats["ns"], setStats["set"])...,
+		)
 	}
-	return nil
+	return metrics, nil
 }
