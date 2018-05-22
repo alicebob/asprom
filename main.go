@@ -68,12 +68,12 @@ func main() {
 	if user != "" {
 		*username = user
 	}
-	
+
 	pass := os.Getenv("AS_PASSWORD")
 	if pass != "" {
 		*password = pass
 	}
-	
+
 	if *showVersion {
 		fmt.Printf("asprom %s\n", version)
 		os.Exit(0)
