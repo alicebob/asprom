@@ -1,0 +1,8 @@
+language: go
+
+script: make test build
+
+sudo: false
+
+go:
+    - "1.10"
