@@ -39,8 +39,8 @@ var (
 	showVersion = flag.Bool("version", false, "show version")
 	addr        = flag.String("listen", ":9145", "listen address for prometheus")
 	nodeAddr    = flag.String("node", "127.0.0.1:3000", "aerospike node")
-	username    = flag.String("username", "", "username. Leave empty for no authentication")
-	password    = flag.String("password", "", "password")
+	username    = flag.String("username", "", "username. Leave empty for no authentication. ENV variable AS_USERNAME, if set, will override this.")
+	password    = flag.String("password", "", "password. ENV variable AS_PASSWORD, if set, will override this.")
 
 	landingPage = `<html>
 <head><title>Aerospike exporter</title></head>
@@ -64,6 +64,16 @@ func main() {
 		log.Fatal("usage error")
 	}
 
+	user := os.Getenv("AS_USERNAME")
+	if user != "" {
+		*username = user
+	}
+	
+	pass := os.Getenv("AS_PASSWORD")
+	if pass != "" {
+		*password = pass
+	}
+	
 	if *showVersion {
 		fmt.Printf("asprom %s\n", version)
 		os.Exit(0)
