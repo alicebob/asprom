@@ -15,6 +15,8 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"net"
+	"strconv"
 	as "github.com/aerospike/aerospike-client-go"
 	"github.com/aerospike/aerospike-client-go/pkg/bcrypt"
 	"github.com/prometheus/client_golang/prometheus"
@@ -37,12 +39,11 @@ var (
 	version     = "master"
 	showVersion = flag.Bool("version", false, "show version")
 	addr        = flag.String("listen", ":9145", "listen address for prometheus")
-	nodeAddr    = flag.String("node", "127.0.0.1", "aerospike node")
+	nodeAddr    = flag.String("node", "127.0.0.1:3010", "aerospike node")
 	tlsName    = flag.String("tlsName", "", "tlsName")
-	key         = flag.String("key", "", "certificate - key")
-	certf         = flag.String("certf", "", "certificate - cert")
-	port        = flag.Int("port", 3010, "aerospike port")
-	connectionType        = flag.String("connType", "secure", "connection type - either secure or non-secure")
+	tlsKey         = flag.String("tlsKey", "", "certificate - key")
+	tlsCert         = flag.String("tlsCert", "", "certificate - cert")
+	enableTLS        = flag.Bool("enableTLS", true, "enable or disable tls")
 	username    = flag.String("username", "", "username. Leave empty for no authentication. ENV variable AS_USERNAME, if set, will override this.")
 	password    = flag.String("password", "", "password. ENV variable AS_PASSWORD, if set, will override this.")
 	//authMode = flag.String("A", "internal", "Authentication mode: internal | external")
@@ -108,17 +109,19 @@ func main() {
 		fmt.Printf("asprom %s\n", version)
 		os.Exit(0)
 	}
+	var port string
+	_,port,_ = net.SplitHostPort(*nodeAddr)
 	var col *asCollector
 	clientPolicy := as.NewClientPolicy()
 
-	if *connectionType == "secure" {
-		if *tlsName == "" || *certf == "" || *key == "" { log.Fatal("You are missing either tlsName, certificate or key for secure connection")}
-		configureClientPolicy(clientPolicy,*username,*password,*certf,*key)
-		col = newAsCollector(*nodeAddr,*clientPolicy,*port,clientPolicy.User,clientPolicy.Password)
+	if *enableTLS == true {
+		if *tlsName == "" || *tlsCert == "" || *tlsKey == "" { log.Fatal("You are missing either tlsName, certificate or key for secure connection")}
+		configureClientPolicy(clientPolicy,*username,*password,*tlsCert,*tlsKey)
+		col = newAsCollector(*nodeAddr,*clientPolicy,port,clientPolicy.User,clientPolicy.Password)
 
 	}else {
-		*port = 3000 //set default port
-		col = newAsCollector(*nodeAddr,*clientPolicy,*port,*username, *password)
+		//port = 3000 //set default port
+		col = newAsCollector(*nodeAddr,*clientPolicy,port,*username, *password)
 	}
 
 	req := prometheus.NewRegistry()
@@ -139,7 +142,7 @@ type collector interface {
 
 type asCollector struct {
 	nodeAddr     string
-	port         int
+	port         string
 	username     string
 	password     string
 	clientPolicy *as.ClientPolicy
@@ -147,7 +150,7 @@ type asCollector struct {
 	collectors   []collector
 }
 
-func 	newAsCollector(nodeAddr string, clientPolicy as.ClientPolicy, port int, username string, password string) *asCollector {
+func 	newAsCollector(nodeAddr string, clientPolicy as.ClientPolicy, port string, username string, password string) *asCollector {
 	totalScrapes := prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: systemNode,
@@ -199,7 +202,8 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 
 func (asc *asCollector) collect() ([]prometheus.Metric, error) {
 	//clientPolicy = as.NewClientPolicy()
-	host := as.NewHost(asc.nodeAddr,asc.port)
+	portAsInt,_ := strconv.Atoi(asc.port)
+	host := as.NewHost(asc.nodeAddr,portAsInt)
 	host.TLSName = *tlsName
 	conn, err := as.NewSecureConnection(asc.clientPolicy, host)//, 3*time.Second)
 	if err != nil {
