@@ -15,15 +15,16 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"net"
-	"strconv"
 	as "github.com/aerospike/aerospike-client-go"
 	"github.com/aerospike/aerospike-client-go/pkg/bcrypt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 )
 
 const (
@@ -39,11 +40,11 @@ var (
 	version     = "master"
 	showVersion = flag.Bool("version", false, "show version")
 	addr        = flag.String("listen", ":9145", "listen address for prometheus")
-	nodeAddr    = flag.String("node", "127.0.0.1:3010", "aerospike node")
-	tlsName    = flag.String("tlsName", "", "tlsName")
-	tlsKey         = flag.String("tlsKey", "", "certificate - key")
-	tlsCert         = flag.String("tlsCert", "", "certificate - cert")
-	enableTLS        = flag.Bool("enableTLS", true, "enable or disable tls")
+	nodeAddr    = flag.String("node", "127.0.0.1:3000", "aerospike node")
+	tlsName     = flag.String("tlsName", "", "tlsName")
+	tlsKey      = flag.String("tlsKey", "", "certificate - key")
+	tlsCert     = flag.String("tlsCert", "", "certificate - cert")
+	enableTLS   = flag.Bool("enableTLS", false, "enable or disable tls")
 	username    = flag.String("username", "", "username. Leave empty for no authentication. ENV variable AS_USERNAME, if set, will override this.")
 	password    = flag.String("password", "", "password. ENV variable AS_PASSWORD, if set, will override this.")
 	//authMode = flag.String("A", "internal", "Authentication mode: internal | external")
@@ -64,7 +65,6 @@ var (
 	)
 )
 
-
 func configureClientPolicy(clientPolicy *as.ClientPolicy, username string, password string, certificate string, key string) {
 
 	if username != "" {
@@ -72,10 +72,10 @@ func configureClientPolicy(clientPolicy *as.ClientPolicy, username string, passw
 		clientPolicy.Password = password
 	}
 	/*
-			if *authMode == "external" {
-				clientPolicy.AuthMode = as.AuthModeExternal
+		if *authMode == "external" {
+			clientPolicy.AuthMode = as.AuthModeExternal
 
-			}
+		}
 	*/
 	cert, err := tls.LoadX509KeyPair(certificate, key)
 	if err != nil {
@@ -110,18 +110,20 @@ func main() {
 		os.Exit(0)
 	}
 	var port string
-	_,port,_ = net.SplitHostPort(*nodeAddr)
+	_, port, _ = net.SplitHostPort(*nodeAddr)
 	var col *asCollector
 	clientPolicy := as.NewClientPolicy()
 
 	if *enableTLS == true {
-		if *tlsName == "" || *tlsCert == "" || *tlsKey == "" { log.Fatal("You are missing either tlsName, certificate or key for secure connection")}
-		configureClientPolicy(clientPolicy,*username,*password,*tlsCert,*tlsKey)
-		col = newAsCollector(*nodeAddr,*clientPolicy,port,clientPolicy.User,clientPolicy.Password)
+		if *tlsName == "" || *tlsCert == "" || *tlsKey == "" {
+			log.Fatal("You are missing either tlsName, certificate or key for secure connection")
+		}
+		configureClientPolicy(clientPolicy, *username, *password, *tlsCert, *tlsKey)
+		col = newAsCollector(*nodeAddr, *clientPolicy, port, clientPolicy.User, clientPolicy.Password)
 
-	}else {
+	} else {
 		//port = 3000 //set default port
-		col = newAsCollector(*nodeAddr,*clientPolicy,port,*username, *password)
+		col = newAsCollector(*nodeAddr, *clientPolicy, port, *username, *password)
 	}
 
 	req := prometheus.NewRegistry()
@@ -150,7 +152,7 @@ type asCollector struct {
 	collectors   []collector
 }
 
-func 	newAsCollector(nodeAddr string, clientPolicy as.ClientPolicy, port string, username string, password string) *asCollector {
+func newAsCollector(nodeAddr string, clientPolicy as.ClientPolicy, port string, username string, password string) *asCollector {
 	totalScrapes := prometheus.NewCounter(prometheus.CounterOpts{
 		Namespace: namespace,
 		Subsystem: systemNode,
@@ -202,10 +204,18 @@ func (asc *asCollector) Collect(ch chan<- prometheus.Metric) {
 
 func (asc *asCollector) collect() ([]prometheus.Metric, error) {
 	//clientPolicy = as.NewClientPolicy()
-	portAsInt,_ := strconv.Atoi(asc.port)
-	host := as.NewHost(asc.nodeAddr,portAsInt)
+	portAsInt, _ := strconv.Atoi(asc.port)
+	host := as.NewHost(asc.nodeAddr, portAsInt)
 	host.TLSName = *tlsName
-	conn, err := as.NewSecureConnection(asc.clientPolicy, host)//, 3*time.Second)
+	var conn *as.Connection
+	var err error
+
+	if *enableTLS == true {
+		conn, err = as.NewSecureConnection(asc.clientPolicy, host) //, 3*time.Second)
+	} else {
+		conn, err = as.NewConnection(asc.nodeAddr, 3*time.Second)
+	}
+
 	if err != nil {
 		return nil, err
 	}
