@@ -195,7 +195,7 @@ var (
 		// geo2dsphere-within.max-cells=12
 		// geo2dsphere-within.level-mod=1
 		// geo2dsphere-within.earth-radius-meters=6371000
-    gauge("device_compression_ratio", "device compression ratio"),
+		gauge("device_compression_ratio", "device compression ratio"),
 	}
 )
 
