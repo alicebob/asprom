@@ -196,6 +196,9 @@ var (
 		// geo2dsphere-within.level-mod=1
 		// geo2dsphere-within.earth-radius-meters=6371000
 		gauge("device_compression_ratio", "device compression ratio"),
+		gauge("n_nodes_quiesced", "n nodes quiesced"),
+		gauge("effective_is_quiesced", "effective is quiesced"),
+		gauge("pending_quiesce", "pending quiesce"),
 	}
 )
 
