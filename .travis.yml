@@ -1,6 +1,6 @@
 language: go
 
-script: make test build
+script: GOPATH="" make test build
 
 sudo: false
 
