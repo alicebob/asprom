@@ -97,6 +97,7 @@ func counter(name string, desc string) metric {
 
 // promkey makes the prom metric name out of an aerospike stat name
 func promkey(sys, key string) string {
-	k := strings.Replace(key, "-", "_", -1)
+	replacer := strings.NewReplacer("-", "_", ".", "_")
+	k := replacer.Replace(key)
 	return namespace + "_" + sys + "_" + k
 }
