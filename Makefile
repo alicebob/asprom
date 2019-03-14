@@ -1,6 +1,6 @@
 .PHONY: all build test vendor release
 
-all: build test
+all: vendor build test
 
 build:
 	go build -mod=vendor
