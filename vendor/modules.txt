@@ -12,7 +12,7 @@ github.com/aerospike/aerospike-client-go/utils/buffer
 github.com/aerospike/aerospike-client-go/internal/lua/resources
 # github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a
 github.com/beorn7/perks/quantile
-# github.com/golang/protobuf v0.0.0-20170902000452-17ce1425424a
+# github.com/golang/protobuf v1.2.0
 github.com/golang/protobuf/proto
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
