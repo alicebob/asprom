@@ -195,6 +195,14 @@ var (
 		// geo2dsphere-within.max-cells=12
 		// geo2dsphere-within.level-mod=1
 		// geo2dsphere-within.earth-radius-meters=6371000
+		gauge("device_compression_ratio", "device compression ratio"),
+		gauge("n_nodes_quiesced", "n nodes quiesced"),
+		gauge("effective_is_quiesced", "effective is quiesced"),
+		gauge("pending_quiesce", "pending quiesce"),
+		gauge("index-type.mounts-high-water-pct", "index type mounts high water pct"),
+		gauge("index-type.mounts-size-limit", "index type mounts size limit"),
+		gauge("index_flash_used_bytes", "index flash used bytes"),
+		gauge("index_flash_used_pct", "index flash used pct"),
 	}
 )
 

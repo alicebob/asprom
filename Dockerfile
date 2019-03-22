@@ -1,30 +1,37 @@
-# builder
-FROM golang:1.9.3-alpine3.7 AS builder
-
-WORKDIR /go/src/github.com/alicebob
-
+# Accept the Go version for the image to be set as a build argument.
+# Default to Go 1.12
+ARG GO_VERSION=1.12
 ARG ASPROM_VERSION=1.0.1
 
-RUN apk add --no-cache git \
-    && git clone https://github.com/alicebob/asprom.git \
-    && cd asprom \
-    && git fetch --all --tags --prune \
-    && git checkout tags/$ASPROM_VERSION
+# First stage: build the executable.
+FROM golang:${GO_VERSION}-alpine AS build
 
-WORKDIR /go/src/github.com/alicebob/asprom
+# Create the user and group files that will be used in the running container to
+# run the process as an unprivileged user.
+RUN mkdir /user && \
+    echo '1000:x:65534:65534:1000:/:' > /user/passwd && \
+    echo '1000:x:65534:' > /user/group
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o asprom .
+# Install the Certificate-Authority certificates for the app to be able to make
+# calls to HTTPS endpoints.
+RUN apk add --no-cache ca-certificates git curl
 
+WORKDIR /src
 
+COPY . .
 
-# final
-FROM alpine:3.7
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o asprom .
 
-RUN apk --no-cache add ca-certificates
+# Final stage: the running container.
+FROM scratch AS final
 
-WORKDIR /root/
+# Import the user and group files from the build stage.
+COPY --from=build /user/group /user/passwd /etc/
 
-COPY --from=builder /go/src/github.com/alicebob/asprom .
+# Import the Certificate-Authority certificates for enabling HTTPS.
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+COPY --from=build /src/asprom .
 
 EXPOSE 9145
 

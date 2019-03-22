@@ -1,0 +1,35 @@
+# github.com/aerospike/aerospike-client-go v1.29.0
+github.com/aerospike/aerospike-client-go
+github.com/aerospike/aerospike-client-go/pkg/bcrypt
+github.com/aerospike/aerospike-client-go/internal/lua
+github.com/aerospike/aerospike-client-go/logger
+github.com/aerospike/aerospike-client-go/pkg/ripemd160
+github.com/aerospike/aerospike-client-go/types
+github.com/aerospike/aerospike-client-go/types/atomic
+github.com/aerospike/aerospike-client-go/types/particle_type
+github.com/aerospike/aerospike-client-go/types/rand
+github.com/aerospike/aerospike-client-go/utils/buffer
+github.com/aerospike/aerospike-client-go/internal/lua/resources
+# github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a
+github.com/beorn7/perks/quantile
+# github.com/golang/protobuf v1.2.0
+github.com/golang/protobuf/proto
+# github.com/matttproud/golang_protobuf_extensions v1.0.1
+github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/prometheus/client_golang v0.0.0-20170907150625-671c87b04728
+github.com/prometheus/client_golang/prometheus
+github.com/prometheus/client_golang/prometheus/promhttp
+# github.com/prometheus/client_model v0.0.0-20170216185247-6f3806018612
+github.com/prometheus/client_model/go
+# github.com/prometheus/common v0.0.0-20170908161822-2f17f4a9d485
+github.com/prometheus/common/expfmt
+github.com/prometheus/common/model
+github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
+# github.com/prometheus/procfs v0.0.0-20170703101242-e645f4e5aaa8
+github.com/prometheus/procfs
+github.com/prometheus/procfs/xfs
+# github.com/yuin/gopher-lua v0.0.0-20181214045814-db9ae37725ec
+github.com/yuin/gopher-lua
+github.com/yuin/gopher-lua/ast
+github.com/yuin/gopher-lua/parse
+github.com/yuin/gopher-lua/pm
