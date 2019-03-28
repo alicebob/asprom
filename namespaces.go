@@ -166,7 +166,7 @@ var (
 		counter("xdr_write_success", "xdr write success"),
 		counter("xdr_write_timeout", "xdr write timeout"),
 		gauge("available_bin_names", "available bin names"),
-		gauge("defrag_q", "defrag queue"),
+		// broken gauge("defrag_q", "defrag queue"),
 		gauge("device_available_pct", "device available pct"),
 		gauge("device_compression_ratio", "device compression ratio"),
 		gauge("device_free_pct", "device free pct"),
@@ -216,12 +216,12 @@ var (
 		gauge("prole_objects", "prole objects"),
 		gauge("prole_tombstones", "prole tombstones"),
 		gauge("replication-factor", "replication factor"),
-		gauge("shadow_write_q", "shadow write queue"),
+		// broken gauge("shadow_write_q", "shadow write queue"),
 		gauge("stop_writes", "stop writes"),
 		gauge("stop-writes-pct", "stop writes pct"),
 		gauge("tombstones", "tombstones"),
-		gauge("write_q", "write queue"),
-		//device-level stats don't appear to work
+		// gauge("write_q", "write queue"),
+		// device-level stats don't appear to work
 		// and this plugin thinks "storage-engine.device[0].write_q" is malformed.
 	}
 )
