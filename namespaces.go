@@ -220,6 +220,10 @@ var (
 		gauge("stop_writes", "stop writes"),
 		gauge("stop-writes-pct", "stop writes pct"),
 		gauge("tombstones", "tombstones"),
+		// including additional key metrics as recommended by aerospike  https://www.aerospike.com/docs/operations/monitor/key_metrics/index.html
+		gauge("clock_skew_stop_writes", "clock skew stop writes"),
+		gauge("dead_partitions", "dead partitions"),
+		gauge("unavailable_partitions", "unavailable partitions"),
 		// gauge("write_q", "write queue"),
 		// device-level stats don't appear to work
 		// and this plugin thinks "storage-engine.device[0].write_q" is malformed.
