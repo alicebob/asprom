@@ -26,12 +26,13 @@ import (
 )
 
 const (
-	namespace       = "aerospike"
-	systemNode      = "node"
-	systemNamespace = "ns"
-	systemLatency   = "latency"
-	systemOps       = "ops" // reported in latency
-	systemSet       = "set"
+	namespace         = "aerospike"
+	systemNode        = "node"
+	systemNamespace   = "ns"
+	systemLatency     = "latency"
+	systemLatencyHist = "latency_hist" // total number of ops
+	systemOps         = "ops"
+	systemSet         = "set"
 )
 
 var (
