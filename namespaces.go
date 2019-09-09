@@ -224,6 +224,7 @@ var (
 		gauge("clock_skew_stop_writes", "clock skew stop writes"),
 		gauge("dead_partitions", "dead partitions"),
 		gauge("unavailable_partitions", "unavailable partitions"),
+		gauge("rack-id", "rack id"),
 		// gauge("write_q", "write queue"),
 		// device-level stats don't appear to work
 		// and this plugin thinks "storage-engine.device[0].write_q" is malformed.
