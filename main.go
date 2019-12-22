@@ -75,6 +75,11 @@ func main() {
 		*password = pass
 	}
 
+    exporterAddr := os.Getenv("EXPORTER_ADDRESS")
+    if exporterAddr != "" {
+        *addr = exporterAddr
+    }
+
 	if *showVersion {
 		fmt.Printf("asprom %s\n", version)
 		os.Exit(0)
