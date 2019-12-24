@@ -1,8 +1,8 @@
 package main
 
 import (
-	"strings"
 	"bytes"
+	"strings"
 
 	as "github.com/aerospike/aerospike-client-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -226,12 +226,11 @@ var (
 		// and this plugin thinks "storage-engine.device[0].write_q" is malformed.
 	}
 	NamespaceStorageMetrics = []metric{
-        counter("defrag_reads", "defrag reads"),
+		counter("defrag_reads", "defrag reads"),
 		counter("defrag_writes", "defrag writes"),
-        gauge("shadow_write_q", "shadow write queue"),
+		gauge("shadow_write_q", "shadow write queue"),
 		gauge("defrag_q", "defrag queue"),
-	    gauge("write_q", "write queue"),
-
+		gauge("write_q", "write queue"),
 	}
 )
 
@@ -273,37 +272,37 @@ func (nc nsCollector) describe(ch chan<- *prometheus.Desc) {
 
 func (nc nsCollector) parseStorage(s string, d string) (string, error) {
 	buf := bytes.Buffer{}
-    for _, l := range strings.Split(s, ";") {
+	for _, l := range strings.Split(s, ";") {
 		for _, v := range strings.Split(l, ":") {
 			kv := strings.SplitN(v, "=", 2)
 			if len(kv) > 1 {
-			    if strings.HasPrefix(kv[0], d) {
-			        //todo: optimize
-			        kv[0] = strings.Replace(kv[0] + ".", d, "", 1)
-			        kv[0] = strings.Replace(kv[0], ".", "", -1)
-			    }
+				if strings.HasPrefix(kv[0], d) {
+					//todo: optimize
+					kv[0] = strings.Replace(kv[0]+".", d, "", 1)
+					kv[0] = strings.Replace(kv[0], ".", "", -1)
+				}
 				buf.WriteString(kv[0] + "=" + kv[1] + ";")
 			}
 		}
 	}
 	r := buf.String()
-    return r, nil
+	return r, nil
 }
 
 func (nc nsCollector) splitInfo(s string) (string, string, map[string]string) {
-    nsStorageMounts := map[string]string{}
+	nsStorageMounts := map[string]string{}
 
-    bufStandardMetrics := bytes.Buffer{}
+	bufStandardMetrics := bytes.Buffer{}
 	bufStorageMetrics := bytes.Buffer{}
 
-    for _, l := range strings.Split(s, ";") {
+	for _, l := range strings.Split(s, ";") {
 		for _, v := range strings.Split(l, ":") {
 			kv := strings.SplitN(v, "=", 2)
 			if strings.HasPrefix(kv[0], "storage-engine") {
 				bufStorageMetrics.WriteString(v + ";")
-			    if strings.HasSuffix(kv[0], "]") {
-			        nsStorageMounts[kv[1]] = kv[0]
-			    }
+				if strings.HasSuffix(kv[0], "]") {
+					nsStorageMounts[kv[1]] = kv[0]
+				}
 			} else {
 				bufStandardMetrics.WriteString(v + ";")
 			}
@@ -311,7 +310,7 @@ func (nc nsCollector) splitInfo(s string) (string, string, map[string]string) {
 	}
 	nsStandardMetrics := bufStandardMetrics.String()
 	nsStorageMetrics := bufStorageMetrics.String()
-    return nsStorageMetrics, nsStandardMetrics, nsStorageMounts
+	return nsStorageMetrics, nsStandardMetrics, nsStorageMounts
 }
 
 func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) {
@@ -333,13 +332,13 @@ func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) 
 			infoCollect(cmetrics(nc), nsInfoStandard, ns)...,
 		)
 
-        for mountName, metricName := range nsInfoStorageDevices {
-            nsInfoStorage, err = nc.parseStorage(nsInfoStorage, metricName)
-            metrics = append(
-			    metrics,
-			    infoCollect(cmetrics(nc), nsInfoStorage, ns, mountName)...,
-		    )
-        }
+		for mountName, metricName := range nsInfoStorageDevices {
+			nsInfoStorage, err = nc.parseStorage(nsInfoStorage, metricName)
+			metrics = append(
+				metrics,
+				infoCollect(cmetrics(nc), nsInfoStorage, ns, mountName)...,
+			)
+		}
 	}
 	return metrics, nil
 }
