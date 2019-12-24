@@ -2,6 +2,7 @@ package main
 
 import (
 	"strings"
+	"bytes"
 
 	as "github.com/aerospike/aerospike-client-go"
 	"github.com/prometheus/client_golang/prometheus"
@@ -271,7 +272,7 @@ func (nc nsCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (nc nsCollector) parseStorage(s string, d string) (string, error) {
-    r := ""
+	buf := bytes.Buffer{}
     for _, l := range strings.Split(s, ";") {
 		for _, v := range strings.Split(l, ":") {
 			kv := strings.SplitN(v, "=", 2)
@@ -281,32 +282,36 @@ func (nc nsCollector) parseStorage(s string, d string) (string, error) {
 			        kv[0] = strings.Replace(kv[0] + ".", d, "", 1)
 			        kv[0] = strings.Replace(kv[0], ".", "", -1)
 			    }
-                r += kv[0] + "=" + kv[1] + ";"
+				buf.WriteString(kv[0] + "=" + kv[1] + ";")
 			}
 		}
 	}
+	r := buf.String()
     return r, nil
 }
 
-func (nc nsCollector) splitInfo(s map[string]string, ns string) (map[string]string, map[string]string, map[string]string) {
-    ns_metrics := map[string]string{}
-    ns_storage_metrics := map[string]string{}
-    ns_storage_devices := map[string]string{}
+func (nc nsCollector) splitInfo(s string) (string, string, map[string]string) {
+    nsStorageMounts := map[string]string{}
 
-    for _, l := range strings.Split(s["namespace/"+ns], ";") {
+    bufStandardMetrics := bytes.Buffer{}
+	bufStorageMetrics := bytes.Buffer{}
+
+    for _, l := range strings.Split(s, ";") {
 		for _, v := range strings.Split(l, ":") {
 			kv := strings.SplitN(v, "=", 2)
 			if strings.HasPrefix(kv[0], "storage-engine") {
-			    ns_storage_metrics["namespace/"+ns] += v + ";"
+				bufStorageMetrics.WriteString(v + ";")
 			    if strings.HasSuffix(kv[0], "]") {
-			        ns_storage_devices[kv[1]] = kv[0]
+			        nsStorageMounts[kv[1]] = kv[0]
 			    }
 			} else {
-			    ns_metrics["namespace/"+ns] += v + ";"
+				bufStandardMetrics.WriteString(v + ";")
 			}
 		}
 	}
-    return ns_storage_metrics, ns_metrics, ns_storage_devices
+	nsStandardMetrics := bufStandardMetrics.String()
+	nsStorageMetrics := bufStorageMetrics.String()
+    return nsStorageMetrics, nsStandardMetrics, nsStorageMounts
 }
 
 func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) {
@@ -316,23 +321,23 @@ func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) 
 	}
 	var metrics []prometheus.Metric
 	for _, ns := range strings.Split(info["namespaces"], ";") {
-		nsinfo, err := as.RequestInfo(conn, "namespace/"+ns)
+		nsInfo, err := as.RequestInfo(conn, "namespace/"+ns)
 		if err != nil {
 			return nil, err
 		}
 
-		nsinfo_storage, nsinfo_standart, nsinfo_devices := nc.splitInfo(nsinfo,ns)
+		nsInfoStorage, nsInfoStandard, nsInfoStorageDevices := nc.splitInfo(nsInfo["namespace/"+ns])
 
 		metrics = append(
 			metrics,
-			infoCollect(cmetrics(nc), nsinfo_standart["namespace/"+ns], ns)...,
+			infoCollect(cmetrics(nc), nsInfoStandard, ns)...,
 		)
 
-        for name, metric := range nsinfo_devices {
-            nsinfo_storage["namespace/"+ns], err = nc.parseStorage(nsinfo_storage["namespace/"+ns], metric)
+        for mountName, metricName := range nsInfoStorageDevices {
+            nsInfoStorage, err = nc.parseStorage(nsInfoStorage, metricName)
             metrics = append(
 			    metrics,
-			    infoCollect(cmetrics(nc), nsinfo_storage["namespace/"+ns], ns, name)...,
+			    infoCollect(cmetrics(nc), nsInfoStorage, ns, mountName)...,
 		    )
         }
 	}
