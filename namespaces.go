@@ -90,8 +90,6 @@ var (
 		counter("client_write_error", "client write error"),
 		counter("client_write_success", "client write success"),
 		counter("client_write_timeout", "client write timeout"),
-		counter("defrag_reads", "defrag reads"),
-		counter("defrag_writes", "defrag writes"),
 		counter("evicted_objects", "evicted objects"),
 		counter("expired_objects", "expired objects"),
 		counter("fail_generation", "fail generation"),
@@ -166,7 +164,6 @@ var (
 		counter("xdr_write_success", "xdr write success"),
 		counter("xdr_write_timeout", "xdr write timeout"),
 		gauge("available_bin_names", "available bin names"),
-		// broken gauge("defrag_q", "defrag queue"),
 		gauge("device_available_pct", "device available pct"),
 		gauge("device_compression_ratio", "device compression ratio"),
 		gauge("device_free_pct", "device free pct"),
@@ -216,7 +213,6 @@ var (
 		gauge("prole_objects", "prole objects"),
 		gauge("prole_tombstones", "prole tombstones"),
 		gauge("replication-factor", "replication factor"),
-		// broken gauge("shadow_write_q", "shadow write queue"),
 		gauge("stop_writes", "stop writes"),
 		gauge("stop-writes-pct", "stop writes pct"),
 		gauge("tombstones", "tombstones"),
@@ -225,9 +221,16 @@ var (
 		gauge("dead_partitions", "dead partitions"),
 		gauge("unavailable_partitions", "unavailable partitions"),
 		gauge("rack-id", "rack id"),
-		// gauge("write_q", "write queue"),
 		// device-level stats don't appear to work
 		// and this plugin thinks "storage-engine.device[0].write_q" is malformed.
+	}
+	NamespaceStorageMetrics = []metric{
+        counter("defrag_reads", "defrag reads"),
+		counter("defrag_writes", "defrag writes"),
+        gauge("shadow_write_q", "shadow write queue"),
+		gauge("defrag_q", "defrag queue"),
+	    gauge("write_q", "write queue"),
+
 	}
 )
 
@@ -246,6 +249,18 @@ func newNSCollector() nsCollector {
 			),
 		}
 	}
+	for _, m := range NamespaceStorageMetrics {
+		ns[m.aeroName] = cmetric{
+			typ: m.typ,
+			desc: prometheus.NewDesc(
+				promkey(systemNamespace, m.aeroName),
+				m.desc,
+				[]string{"namespace", "mount"},
+				nil,
+			),
+		}
+	}
+
 	return ns
 }
 
@@ -253,6 +268,45 @@ func (nc nsCollector) describe(ch chan<- *prometheus.Desc) {
 	for _, s := range nc {
 		ch <- s.desc
 	}
+}
+
+func (nc nsCollector) parseStorage(s string, d string) (string, error) {
+    r := ""
+    for _, l := range strings.Split(s, ";") {
+		for _, v := range strings.Split(l, ":") {
+			kv := strings.SplitN(v, "=", 2)
+			if len(kv) > 1 {
+			    if strings.HasPrefix(kv[0], d) {
+			        //todo: optimize
+			        kv[0] = strings.Replace(kv[0] + ".", d, "", 1)
+			        kv[0] = strings.Replace(kv[0], ".", "", -1)
+			    }
+                r += kv[0] + "=" + kv[1] + ";"
+			}
+		}
+	}
+    return r, nil
+}
+
+func (nc nsCollector) splitInfo(s map[string]string, ns string) (map[string]string, map[string]string, map[string]string) {
+    ns_metrics := map[string]string{}
+    ns_storage_metrics := map[string]string{}
+    ns_storage_devices := map[string]string{}
+
+    for _, l := range strings.Split(s["namespace/"+ns], ";") {
+		for _, v := range strings.Split(l, ":") {
+			kv := strings.SplitN(v, "=", 2)
+			if strings.HasPrefix(kv[0], "storage-engine") {
+			    ns_storage_metrics["namespace/"+ns] += v + ";"
+			    if strings.HasSuffix(kv[0], "]") {
+			        ns_storage_devices[kv[1]] = kv[0]
+			    }
+			} else {
+			    ns_metrics["namespace/"+ns] += v + ";"
+			}
+		}
+	}
+    return ns_storage_metrics, ns_metrics, ns_storage_devices
 }
 
 func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) {
@@ -266,10 +320,21 @@ func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) 
 		if err != nil {
 			return nil, err
 		}
+
+		nsinfo_storage, nsinfo_standart, nsinfo_devices := nc.splitInfo(nsinfo,ns)
+
 		metrics = append(
 			metrics,
-			infoCollect(cmetrics(nc), nsinfo["namespace/"+ns], ns)...,
+			infoCollect(cmetrics(nc), nsinfo_standart["namespace/"+ns], ns)...,
 		)
+
+        for name, metric := range nsinfo_devices {
+            nsinfo_storage["namespace/"+ns], err = nc.parseStorage(nsinfo_storage["namespace/"+ns], metric)
+            metrics = append(
+			    metrics,
+			    infoCollect(cmetrics(nc), nsinfo_storage["namespace/"+ns], ns, name)...,
+		    )
+        }
 	}
 	return metrics, nil
 }
