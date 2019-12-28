@@ -271,6 +271,11 @@ func (nc nsCollector) describe(ch chan<- *prometheus.Desc) {
 }
 
 func (nc nsCollector) parseStorage(s string, d string) (string, error) {
+	// the function remove the storage prefix metrics for each device:
+	// d is storage-engine.device[ix]
+	// s is all storage metrics that has been scraped
+	// storage-engine.device[ix].age -> age
+	// https://www.aerospike.com/docs/reference/metrics/#storage-engine.device[ix].age
 	buf := bytes.Buffer{}
 	for _, l := range strings.Split(s, ";") {
 		for _, v := range strings.Split(l, ":") {
@@ -334,6 +339,11 @@ func (nc nsCollector) collect(conn *as.Connection) ([]prometheus.Metric, error) 
 
 		for mountName, metricName := range nsInfoStorageDevices {
 			nsInfoStorage, err = nc.parseStorage(nsInfoStorage, metricName)
+
+			if err != nil {
+				return nil, err
+			}
+
 			metrics = append(
 				metrics,
 				infoCollect(cmetrics(nc), nsInfoStorage, ns, mountName)...,
