@@ -1,7 +1,6 @@
 # Accept the Go version for the image to be set as a build argument.
-# Default to Go 1.12
-ARG GO_VERSION=1.12
-ARG ASPROM_VERSION=1.0.1
+ARG GO_VERSION=1.13
+ARG ASPROM_VERSION=1.8.0
 
 # First stage: build the executable.
 FROM golang:${GO_VERSION}-alpine AS build

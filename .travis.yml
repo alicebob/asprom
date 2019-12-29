@@ -5,4 +5,4 @@ script: GOPATH="" make test build
 sudo: false
 
 go:
-    - "1.12"
+    - "1.13"
