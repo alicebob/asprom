@@ -33,6 +33,7 @@ const (
 	systemLatencyHist = "latency_hist" // total number of ops
 	systemOps         = "ops"
 	systemSet         = "set"
+	secondaryIndex    = "sindex"
 )
 
 var (
@@ -129,6 +130,7 @@ func newAsCollector(nodeAddr, username, password string) *asCollector {
 			newNSCollector(),
 			newLatencyCollector(),
 			newSetCollector(),
+			newSindexCollector(),
 		},
 	}
 }
