@@ -12,8 +12,9 @@ var (
 	// command.
 	// See `asinfo -l -v sets` for the full list.
 	SetMetrics = []metric{
-		gauge("objects", "objects"),
 		gauge("memory_data_bytes", "memory data bytes"),
+		gauge("objects", "objects"),
+		gauge("truncate_lut", "The most covering truncate_lut for this set"),
 		counter("stop-writes-count", "stop writes count"),
 	}
 )
