@@ -55,8 +55,6 @@ var (
 		// storage-engine=memory
 		// tomb-raider-eligible-age=86400
 		// tomb-raider-period=86400
-		// truncate_lut=0
-		// truncated_records=0
 		// write-commit-level-override=off
 		// xmem_id=0
 		counter("batch_sub_proxy_complete", "batch sub proxy complete"),
@@ -152,6 +150,7 @@ var (
 		counter("scan_udf_bg_abort", "scan udf bg abort"),
 		counter("scan_udf_bg_complete", "scan udf bg complete"),
 		counter("scan_udf_bg_error", "scan udf bg error"),
+		counter("truncated_records", "truncated records"),
 		counter("udf_sub_lang_delete_success", "udf sub lang delete success"),
 		counter("udf_sub_lang_error", "udf sub lang error"),
 		counter("udf_sub_lang_read_success", "udf sub lang read success"),
@@ -217,6 +216,7 @@ var (
 		gauge("stop_writes", "stop writes"),
 		gauge("stop-writes-pct", "stop writes pct"),
 		gauge("tombstones", "tombstones"),
+		gauge("truncate_lut", "The most covering truncate_lut for this namespace"),
 		// including additional key metrics as recommended by aerospike  https://www.aerospike.com/docs/operations/monitor/key_metrics/index.html
 		gauge("clock_skew_stop_writes", "clock skew stop writes"),
 		gauge("dead_partitions", "dead partitions"),
