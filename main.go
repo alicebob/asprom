@@ -27,13 +27,14 @@ import (
 
 const (
 	namespace         = "aerospike"
+	secondaryIndex    = "sindex"
 	systemNode        = "node"
 	systemNamespace   = "ns"
 	systemLatency     = "latency"
 	systemLatencyHist = "latency_hist" // total number of ops
 	systemOps         = "ops"
 	systemSet         = "set"
-	secondaryIndex    = "sindex"
+	xdrDC             = "xdr"
 )
 
 var (
@@ -126,11 +127,12 @@ func newAsCollector(nodeAddr, username, password string) *asCollector {
 		password:     password,
 		totalScrapes: totalScrapes,
 		collectors: []collector{
-			newStatsCollector(),
-			newNSCollector(),
 			newLatencyCollector(),
+			newNSCollector(),
 			newSetCollector(),
 			newSindexCollector(),
+			newStatsCollector(),
+			newXdrDCCollector(),
 		},
 	}
 }
