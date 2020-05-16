@@ -1,6 +1,6 @@
 # Project status
 
-Since 2020 (Aerospike ~5.0?) the Aerospike team have their own Prometheus exporter. It's likely a better choice if you run a current version of Aerospike, especially if you run the Enterprise Edition. The exporter here might be a better choice is you run an older version. PRs are still welcome, but don't expect active maintenance to stay up to date with the current Aerospike.
+Since Aerospike 4.5 (beginning 2020) the Aerospike team have their own Prometheus exporter. It's likely a better choice if you run version 4.5 or higher of Aerospike, especially if you run the Enterprise Edition. The exporter here might be a better choice is you run an older version. PRs are still welcome, but don't expect active maintenance to stay up to date with the current Aerospike.
 
 https://github.com/aerospike/aerospike-prometheus-exporter
 
