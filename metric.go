@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -45,6 +46,10 @@ func infoCollect(
 ) []prometheus.Metric {
 	var res []prometheus.Metric
 	stats := parseInfo(info)
+	validLabelValues := make([]string, len(labelValues))
+	for pos, lv := range labelValues {
+		validLabelValues[pos] = sanitizeLabelValue(lv)
+	}
 	for key, m := range metrics {
 		v, ok := stats[key]
 		if !ok {
@@ -58,10 +63,24 @@ func infoCollect(
 		}
 		res = append(
 			res,
-			prometheus.MustNewConstMetric(m.desc, m.typ, f, labelValues...),
+			prometheus.MustNewConstMetric(m.desc, m.typ, f, validLabelValues...),
 		)
 	}
 	return res
+}
+
+func sanitizeLabelValue(lv string) string {
+	if utf8.ValidString(lv) {
+		return lv
+	}
+	fixUtf := func(r rune) rune {
+		if r == utf8.RuneError {
+			return 65533
+		}
+		return r
+	}
+
+	return strings.Map(fixUtf, lv)
 }
 
 func parseInfo(s string) map[string]string {
