@@ -11,4 +11,5 @@ require (
 	github.com/prometheus/procfs v0.0.0-20190519111021-9935e8e0588d // indirect
 	github.com/yuin/gopher-lua v0.0.0-20181214045814-db9ae37725ec // indirect
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
+	golang.org/x/text v0.3.0
 )

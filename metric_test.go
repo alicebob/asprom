@@ -44,6 +44,7 @@ func TestInfoCollect(t *testing.T) {
 		payload string
 		field   string
 		metric  cmetric
+		labels  []string
 		want    string
 	}
 	for n, c := range []cas{
@@ -103,9 +104,41 @@ func TestInfoCollect(t *testing.T) {
 			},
 			want: `gauge:<value:1 > `,
 		},
+		{
+			payload: "counter-1=3.14:gauge-1=6.12:flag=true:counter-2=6.66",
+			field:   "flag",
+			metric: cmetric{
+				typ: prometheus.GaugeValue,
+				desc: prometheus.NewDesc(
+					"c1",
+					"My second flag",
+					[]string{"namespace", "set"},
+					nil,
+				),
+			},
+			//labels: []string{"ns", ""},
+			labels: []string{"ns", "\xC0"},
+			want: `label:<name:"namespace" value:"ns" > label:<name:"set" value:"\357\277\275" > gauge:<value:1 > `,
+		},
+		{
+			payload: "counter-1=3.14:gauge-1=6.12:flag=true:counter-2=6.66",
+			field:   "flag",
+			metric: cmetric{
+				typ: prometheus.GaugeValue,
+				desc: prometheus.NewDesc(
+					"c1",
+					"My second flag",
+					[]string{"namespace", "set"},
+					nil,
+				),
+			},
+			//labels: []string{"ns", ""},
+			labels: []string{"ns", "ӕ"},
+			want: `label:<name:"namespace" value:"ns" > label:<name:"set" value:"\323\225" > gauge:<value:1 > `,
+		},
 	} {
 		metrics := cmetrics{c.field: c.metric}
-		ms := infoCollect(metrics, c.payload)
+		ms := infoCollect(metrics, c.payload, c.labels...)
 
 		if have, want := len(ms), 1; have != want {
 			t.Fatalf("have %d, want %d", have, want)
