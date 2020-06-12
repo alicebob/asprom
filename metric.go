@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"strconv"
@@ -80,7 +81,7 @@ func sanitizeLabelValue(lv string) string {
 		return r
 	}
 
-	return strings.Map(fixUtf, lv)
+	return strings.Map(fixUtf, lv) + " " + hex.EncodeToString([]byte(lv))
 }
 
 func parseInfo(s string) map[string]string {
