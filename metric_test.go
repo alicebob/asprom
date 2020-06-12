@@ -118,7 +118,7 @@ func TestInfoCollect(t *testing.T) {
 			},
 			//labels: []string{"ns", ""},
 			labels: []string{"ns", "\xC0"},
-			want: `label:<name:"namespace" value:"ns" > label:<name:"set" value:"\357\277\275" > gauge:<value:1 > `,
+			want: `label:<name:"namespace" value:"ns" > label:<name:"set" value:"\357\277\275 c0" > gauge:<value:1 > `,
 		},
 		{
 			payload: "counter-1=3.14:gauge-1=6.12:flag=true:counter-2=6.66",
