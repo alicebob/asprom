@@ -95,7 +95,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(landingPage))
 	})
-	http.Handle("/metrics", promhttp.HandlerFor(req, promhttp.HandlerOpts{}))
+	http.Handle("/metrics", promhttp.HandlerFor(req, promhttp.HandlerOpts{ErrorLog: log.New(os.Stdout, "err: ", 0)}))
 	log.Printf("starting asprom. listening on %s\n", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))
 }
